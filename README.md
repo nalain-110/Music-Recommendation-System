@@ -8,7 +8,7 @@
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ## Project Structure
-
+'''
 music_recommender/
 ├── app.py                  ← FastAPI backend (main entry point)
 ├── data_generator.py       ← Synthetic dataset (50 songs, 200 users, 3000 interactions)
@@ -24,7 +24,7 @@ music_recommender/
 ├── models/                 ← Saved model files (auto-created)
 └── static/
     └── index.html          ← Frontend UI
-
+'''
 
 ## 3. Open in browser
 
