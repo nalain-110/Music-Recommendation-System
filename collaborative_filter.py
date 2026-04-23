@@ -1,8 +1,3 @@
-"""
-collaborative_filter.py
-Collaborative Filtering using SVD Matrix Factorization + User-Based KNN.
-"""
-
 import pandas as pd
 import numpy as np
 from sklearn.decomposition import TruncatedSVD
@@ -13,24 +8,18 @@ import os
 
 
 class CollaborativeFilter:
-    """
-    Collaborative Filtering with two strategies:
-    1. SVD Matrix Factorization  — captures latent taste factors
-    2. User-Based KNN            — find users with similar listening patterns
-    """
-
     def __init__(self, n_factors: int = 20, n_neighbors: int = 15):
         self.n_factors = n_factors
         self.n_neighbors = n_neighbors
         self.svd = TruncatedSVD(n_components=n_factors, random_state=42)
 
-        self.user_item_matrix = None   # (n_users, n_songs)
-        self.user_latent = None        # SVD user embeddings
-        self.item_latent = None        # SVD item embeddings
-        self.user_similarity = None    # User-user cosine sim
+        self.user_item_matrix = None 
+        self.user_latent = None 
+        self.item_latent = None      
+        self.user_similarity = None    
 
-        self.user_index = {}   # user_id  → row idx
-        self.song_index = {}   # song_id  → col idx
+        self.user_index = {}  
+        self.song_index = {}   
         self.index_user = {}
         self.index_song = {}
         self.songs_df = None
@@ -39,7 +28,6 @@ class CollaborativeFilter:
     def fit(self, interactions_df: pd.DataFrame, songs_df: pd.DataFrame):
         self.songs_df = songs_df.copy()
 
-        # Build user/song index maps
         user_ids = sorted(interactions_df["user_id"].unique())
         song_ids = sorted(interactions_df["song_id"].unique())
 
@@ -52,8 +40,6 @@ class CollaborativeFilter:
 
         n_users = len(user_ids)
         n_songs = len(song_ids)
-
-        # Build user-item rating matrix (fill missing with 0)
         matrix = np.zeros((n_users, n_songs))
         for _, row in interactions_df.iterrows():
             ui = self.user_index.get(row["user_id"])
@@ -63,19 +49,17 @@ class CollaborativeFilter:
 
         self.user_item_matrix = matrix
 
-        # ── SVD factorization ──────────────────────────────────────────
-        self.user_latent = self.svd.fit_transform(matrix)        # (users, k)
-        self.item_latent = self.svd.components_.T                 # (songs, k)
+        self.user_latent = self.svd.fit_transform(matrix)      
+        self.item_latent = self.svd.components_.T                 
 
-        # Normalize for cosine similarity
+
         self.user_latent_norm = normalize(self.user_latent)
 
-        # ── User-User similarity ───────────────────────────────────────
         self.user_similarity = cosine_similarity(self.user_latent_norm)
 
         self.fitted = True
         variance = self.svd.explained_variance_ratio_.sum()
-        print(f"✅ CF fitted: {n_users} users × {n_songs} songs, "
+        print(f" CF fitted: {n_users} users × {n_songs} songs, "
               f"SVD explains {variance:.1%} variance.")
 
     def _song_meta(self, song_id: int):
@@ -93,7 +77,6 @@ class CollaborativeFilter:
         }
 
     def recommend_svd(self, user_id: int, n: int = 10, exclude_ids: list = None):
-        """SVD-based recommendation for a known user."""
         if not self.fitted or user_id not in self.user_index:
             return []
 
@@ -125,7 +108,6 @@ class CollaborativeFilter:
         return results
 
     def recommend_knn(self, user_id: int, n: int = 10, exclude_ids: list = None):
-        """User-based KNN recommendation."""
         if not self.fitted or user_id not in self.user_index:
             return []
 
@@ -151,7 +133,6 @@ class CollaborativeFilter:
                         song_scores[sid] = song_scores.get(sid, 0) + sim * rating
                         song_weights[sid] = song_weights.get(sid, 0) + abs(sim)
 
-        # Normalize
         normalized = {
             sid: song_scores[sid] / song_weights[sid]
             for sid in song_scores
@@ -176,7 +157,6 @@ class CollaborativeFilter:
         return results
 
     def get_similar_users(self, user_id: int, n: int = 5):
-        """Return top-n most similar users."""
         if user_id not in self.user_index:
             return []
         ui = self.user_index[user_id]
@@ -190,7 +170,7 @@ class CollaborativeFilter:
     def save(self, path="models/cf_model.pkl"):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         joblib.dump(self, path)
-        print(f"💾 CF model saved → {path}")
+        print(f"CF model saved → {path}")
 
     @staticmethod
     def load(path="models/cf_model.pkl"):
