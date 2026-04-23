@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎵 Music Recommendation System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07070f;--surface:#0f0f1a;--card:#151520;--border:rgba(255,255,255,0.07);
+  --accent:#a78bfa;--accent2:#34d399;--accent3:#f472b6;
+  --text:#e2e2f0;--muted:#666680;--glow:rgba(167,139,250,0.2);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden}
+
+/* BG */
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(167,139,250,0.06),transparent 60%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(52,211,153,0.05),transparent 60%);pointer-events:none;z-index:0}
+
+/* LAYOUT */
+.app{display:grid;grid-template-columns:260px 1fr;min-height:100vh;position:relative;z-index:1}
+
+/* SIDEBAR */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:28px 20px;display:flex;flex-direction:column;gap:8px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.logo-icon{font-size:28px}
+.logo-text{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;line-height:1.2}
+.logo-sub{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:0.08em}
+
+.nav-section{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;padding:12px 8px 6px;margin-top:8px}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;width:100%;text-align:left;transition:all 0.2s}
+.nav-btn:hover{background:rgba(167,139,250,0.08);color:var(--text)}
+.nav-btn.active{background:rgba(167,139,250,0.15);color:var(--accent);border:1px solid rgba(167,139,250,0.2)}
+.nav-btn .icon{font-size:16px;width:20px;text-align:center}
+
+/* MAIN */
+.main{padding:32px 36px;overflow-y:auto}
+
+/* HEADER */
+.page-header{margin-bottom:32px}
+.page-title{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;margin-bottom:6px}
+.page-subtitle{color:var(--muted);font-size:14px}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+.stat-card-num{font-family:'Syne',sans-serif;font-weight:700;font-size:32px;color:var(--accent);margin-bottom:4px}
+.stat-card-label{font-size:12px;color:var(--muted)}
+
+/* CARD */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+/* CONTROLS */
+.controls{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.input-group{display:flex;flex-direction:column;gap:6px}
+.input-label{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:0.08em}
+select,input[type=number],input[type=text]{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;min-width:160px}
+select:focus,input:focus{border-color:var(--accent)}
+option{background:var(--surface)}
+
+.btn{padding:9px 20px;border-radius:8px;border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;font-size:13px;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#0a0a14}
+.btn-primary:hover{background:#c4b5fd;transform:translateY(-1px)}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+
+/* SONG CARDS */
+.songs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.song-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;transition:all 0.25s;cursor:pointer;position:relative;overflow:hidden}
+.song-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent3));transform:scaleX(0);transform-origin:left;transition:transform 0.3s}
+.song-card:hover{border-color:rgba(167,139,250,0.3);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.song-card:hover::before{transform:scaleX(1)}
+.song-card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song-card-artist{font-size:12px;color:var(--muted);margin-bottom:10px}
+.song-card-meta{display:flex;gap:8px;flex-wrap:wrap}
+.badge{font-family:'JetBrains Mono',monospace;font-size:9px;padding:3px 8px;border-radius:4px;letter-spacing:0.05em}
+.badge-genre{background:rgba(167,139,250,0.1);color:var(--accent);border:1px solid rgba(167,139,250,0.2)}
+.badge-score{background:rgba(52,211,153,0.1);color:var(--accent2);border:1px solid rgba(52,211,153,0.2)}
+.badge-method{background:rgba(244,114,182,0.1);color:var(--accent3);border:1px solid rgba(244,114,182,0.2)}
+
+/* FEATURE BARS */
+.feature-bars{display:flex;flex-direction:column;gap:10px}
+.feat-row{display:flex;align-items:center;gap:12px}
+.feat-name{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);width:120px;flex-shrink:0}
+.feat-track{flex:1;height:6px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden}
+.feat-fill{height:100%;border-radius:3px;transition:width 0.8s ease}
+.feat-fill.e{background:linear-gradient(90deg,rgba(167,139,250,0.5),var(--accent))}
+.feat-fill.d{background:linear-gradient(90deg,rgba(52,211,153,0.5),var(--accent2))}
+.feat-fill.v{background:linear-gradient(90deg,rgba(244,114,182,0.5),var(--accent3))}
+.feat-fill.a{background:linear-gradient(90deg,rgba(251,191,36,0.5),#fbbf24)}
+.feat-fill.s{background:linear-gradient(90deg,rgba(56,189,248,0.5),#38bdf8)}
+.feat-val{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);width:36px;text-align:right;flex-shrink:0}
+
+/* RATING STARS */
+.stars{display:flex;gap:4px}
+.star{font-size:20px;cursor:pointer;color:var(--border);transition:color 0.15s}
+.star:hover,.star.lit{color:#fbbf24}
+
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--surface);padding:4px;border-radius:10px;width:fit-content}
+.tab{padding:7px 18px;border-radius:7px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;font-size:12px;transition:all 0.2s}
+.tab.active{background:var(--card);color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+
+/* TABLE */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.1em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+td{padding:10px 12px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.03)}
+tr:hover td{background:rgba(167,139,250,0.03)}
+
+/* GENRE BARS */
+.genre-bar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.genre-name{font-size:12px;width:130px;flex-shrink:0}
+.genre-track{flex:1;height:8px;background:rgba(255,255,255,0.04);border-radius:4px;overflow:hidden}
+.genre-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent3))}
+.genre-count{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);width:30px;text-align:right;flex-shrink:0}
+
+/* LOADING */
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(167,139,250,0.2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{display:flex;align-items:center;justify-content:center;gap:12px;padding:48px;color:var(--muted);font-size:14px}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 20px;font-size:13px;z-index:1000;transform:translateY(100px);opacity:0;transition:all 0.3s;border-left:3px solid var(--accent2)}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* EMPTY */
+.empty{text-align:center;padding:48px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+
+/* SECTION HIDDEN */
+.section{display:none}
+.section.active{display:block}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px;opacity:0.5}
+
+@media(max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{position:relative;height:auto;flex-direction:row;flex-wrap:wrap;padding:16px}
+  .nav-section{display:none}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">🎵</div>
+    <div>
+      <div class="logo-text">MusicRec</div>
+      <div class="logo-sub">ML POWERED</div>
+    </div>
+  </div>
+
+  <div class="nav-section">Navigation</div>
+  <button class="nav-btn active" onclick="showSection('dashboard')"><span class="icon">📊</span> Dashboard</button>
+  <button class="nav-btn" onclick="showSection('recommend')"><span class="icon">🎯</span> Recommendations</button>
+  <button class="nav-btn" onclick="showSection('songs')"><span class="icon">🎶</span> Browse Songs</button>
+  <button class="nav-btn" onclick="showSection('users')"><span class="icon">👤</span> Users</button>
+  <button class="nav-btn" onclick="showSection('analytics')"><span class="icon">📈</span> Analytics</button>
+
+  <div class="nav-section" style="margin-top:auto">System</div>
+  <button class="nav-btn" onclick="checkHealth()"><span class="icon">💚</span> Health Check</button>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <!-- ── DASHBOARD ── -->
+  <div id="section-dashboard" class="section active">
+    <div class="page-header">
+      <div class="page-title">🎵 Music Recommendation System</div>
+      <div class="page-subtitle">ML-powered personalization using Hybrid CF + Content-Based Filtering</div>
+    </div>
+
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card"><div class="stat-card-num" id="stat-songs">—</div><div class="stat-card-label">Total Songs</div></div>
+      <div class="stat-card"><div class="stat-card-num" id="stat-users">—</div><div class="stat-card-label">Users</div></div>
+      <div class="stat-card"><div class="stat-card-num" id="stat-interactions">—</div><div class="stat-card-label">Interactions</div></div>
+      <div class="stat-card"><div class="stat-card-num" id="stat-rating">—</div><div class="stat-card-label">Avg Rating</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏆 Top Rated Songs</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>#</th><th>TITLE</th><th>ARTIST</th><th>GENRE</th><th>AVG RATING</th></tr></thead>
+        <tbody id="top-songs-body"><tr><td colspan="5"><div class="loading"><div class="spinner"></div> Loading...</div></td></tr></tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎼 Genre Distribution</div>
+      <div id="genre-bars"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+  <!-- ── RECOMMENDATIONS ── -->
+  <div id="section-recommend" class="section">
+    <div class="page-header">
+      <div class="page-title">🎯 Get Recommendations</div>
+      <div class="page-subtitle">Personalised songs powered by Hybrid ML engine</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚙️ Configure</div>
+      <div class="controls">
+        <div class="input-group">
+          <div class="input-label">USER ID</div>
+          <input type="number" id="rec-user" value="1" min="1" max="200" style="width:120px">
+        </div>
+        <div class="input-group">
+          <div class="input-label">STRATEGY</div>
+          <select id="rec-strategy">
+            <option value="auto">Auto (Smart)</option>
+            <option value="hybrid">Hybrid CF+CBF</option>
+            <option value="svd">SVD (Matrix Factorization)</option>
+            <option value="knn">KNN (User-Based)</option>
+            <option value="cbf">Content-Based</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <div class="input-label">COUNT</div>
+          <input type="number" id="rec-count" value="10" min="1" max="50" style="width:100px">
+        </div>
+        <div class="input-group">
+          <div class="input-label">&nbsp;</div>
+          <button class="btn btn-primary" onclick="loadRecommendations()">🎵 Recommend</button>
+        </div>
+      </div>
+
+      <div id="user-profile-box" style="display:none;background:var(--surface);border-radius:8px;padding:16px;margin-bottom:16px;border:1px solid var(--border)"></div>
+    </div>
+
+    <div id="rec-results"></div>
+  </div>
+
+  <!-- ── SONGS ── -->
+  <div id="section-songs" class="section">
+    <div class="page-header">
+      <div class="page-title">🎶 Browse Songs</div>
+      <div class="page-subtitle">Explore the catalog and find similar tracks</div>
+    </div>
+
+    <div class="card">
+      <div class="controls">
+        <div class="input-group">
+          <div class="input-label">FILTER BY GENRE</div>
+          <select id="genre-filter" onchange="loadSongs()">
+            <option value="">All Genres</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <div class="input-label">&nbsp;</div>
+          <button class="btn btn-primary" onclick="loadSongs()">🔍 Search</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="songs-grid" class="songs-grid"></div>
+  </div>
+
+  <!-- ── SIMILAR SONGS MODAL ── -->
+  <div id="similar-section" style="display:none">
+    <div class="card">
+      <div class="card-title">
+        🔗 Similar Songs
+        <button class="btn btn-ghost btn-sm" onclick="hideSimilar()" style="margin-left:auto">← Back</button>
+      </div>
+      <div id="similar-seed" style="margin-bottom:16px;padding:12px;background:var(--surface);border-radius:8px"></div>
+      <div id="similar-results" class="songs-grid"></div>
+    </div>
+  </div>
+
+  <!-- ── USERS ── -->
+  <div id="section-users" class="section">
+    <div class="page-header">
+      <div class="page-title">👤 User Explorer</div>
+      <div class="page-subtitle">Browse users and their listening profiles</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚙️ Load User</div>
+      <div class="controls">
+        <div class="input-group">
+          <div class="input-label">USER ID (1-200)</div>
+          <input type="number" id="user-lookup" value="1" min="1" max="200">
+        </div>
+        <div class="input-group">
+          <div class="input-label">&nbsp;</div>
+          <button class="btn btn-primary" onclick="loadUser()">🔍 Load User</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="user-detail"></div>
+  </div>
+
+  <!-- ── ANALYTICS ── -->
+  <div id="section-analytics" class="section">
+    <div class="page-header">
+      <div class="page-title">📈 Analytics</div>
+      <div class="page-subtitle">System insights and data visualizations</div>
+    </div>
+    <div id="analytics-content"><div class="loading"><div class="spinner"></div> Loading analytics...</div></div>
+  </div>
+
+</main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';  // Same origin — FastAPI serves this file
+
+// ══════════════════════════════════════════════════════════
+// Utility
+// ══════════════════════════════════════════════════════════
+async function api(path) {
+  const res = await fetch(API + path);
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  return res.json();
+}
+
+async function apiPost(path, body) {
+  const res = await fetch(API + path, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+function toast(msg, color='#34d399') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderLeftColor = color;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  document.getElementById('similar-section').style.display = 'none';
+  event.currentTarget.classList.add('active');
+  // Lazy load
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'songs') loadSongs();
+  if (name === 'analytics') loadAnalytics();
+}
+
+// ══════════════════════════════════════════════════════════
+// Dashboard
+// ══════════════════════════════════════════════════════════
+async function loadDashboard() {
+  try {
+    const data = await api('/analytics/overview');
+    document.getElementById('stat-songs').textContent = data.total_songs;
+    document.getElementById('stat-users').textContent = data.total_users;
+    document.getElementById('stat-interactions').textContent = data.total_interactions.toLocaleString();
+    document.getElementById('stat-rating').textContent = data.avg_rating + '★';
+
+    // Top songs table
+    const tbody = document.getElementById('top-songs-body');
+    tbody.innerHTML = data.top_songs.map((s,i) => `
+      <tr>
+        <td><span style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px">${i+1}</span></td>
+        <td><strong>${s.title}</strong></td>
+        <td style="color:var(--muted)">${s.artist}</td>
+        <td><span class="badge badge-genre">${s.genre}</span></td>
+        <td><span style="color:#fbbf24">★</span> ${(+s.avg_rating).toFixed(2)}</td>
+      </tr>`).join('');
+
+    // Genre bars
+    const entries = Object.entries(data.genre_distribution).sort((a,b)=>b[1]-a[1]);
+    const max = entries[0][1];
+    document.getElementById('genre-bars').innerHTML = entries.map(([g,c])=>`
+      <div class="genre-bar-row">
+        <div class="genre-name">${g}</div>
+        <div class="genre-track"><div class="genre-fill" style="width:${(c/max*100).toFixed(1)}%"></div></div>
+        <div class="genre-count">${c}</div>
+      </div>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+// ══════════════════════════════════════════════════════════
+// Recommendations
+// ══════════════════════════════════════════════════════════
+async function loadRecommendations() {
+  const uid  = document.getElementById('rec-user').value;
+  const strat= document.getElementById('rec-strategy').value;
+  const n    = document.getElementById('rec-count').value;
+  const box  = document.getElementById('rec-results');
+  const pbox = document.getElementById('user-profile-box');
+
+  box.innerHTML = '<div class="loading"><div class="spinner"></div> Fetching recommendations...</div>';
+
+  try {
+    const data = await api(`/recommend/${uid}?n=${n}&strategy=${strat}`);
+
+    // Profile box
+    const p = data.profile;
+    pbox.style.display = 'block';
+    pbox.innerHTML = `
+      <div style="display:flex;gap:24px;flex-wrap:wrap;font-size:13px">
+        <div><span style="color:var(--muted);font-size:11px">USER ID</span><br><strong style="font-family:'Syne',sans-serif">#${uid}</strong></div>
+        <div><span style="color:var(--muted);font-size:11px">HISTORY</span><br><strong>${p.history_count} songs</strong></div>
+        <div><span style="color:var(--muted);font-size:11px">LIKED</span><br><strong>${p.liked_count ?? 0} songs</strong></div>
+        <div><span style="color:var(--muted);font-size:11px">AVG RATING</span><br><strong>${p.avg_rating ? p.avg_rating+'★' : 'N/A'}</strong></div>
+        <div><span style="color:var(--muted);font-size:11px">TOP GENRES</span><br><strong>${(p.top_genres||[]).join(', ') || 'N/A'}</strong></div>
+        <div><span style="color:var(--muted);font-size:11px">STRATEGY</span><br><span class="badge badge-method">${strat.toUpperCase()}</span></div>
+      </div>`;
+
+    if (!data.recommendations.length) {
+      box.innerHTML = '<div class="empty"><div class="empty-icon">🎵</div><p>No recommendations found for this user.</p></div>';
+      return;
+    }
+
+    box.innerHTML = `
+      <div class="card">
+        <div class="card-title">🎯 ${data.count} Recommended Songs</div>
+        <div class="songs-grid">
+          ${data.recommendations.map(s => songCard(s, uid)).join('')}
+        </div>
+      </div>`;
+  } catch(e) {
+    box.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>Error: ${e.message}</p></div>`;
+  }
+}
+
+function songCard(s, uid=null) {
+  return `
+    <div class="song-card" onclick="showSimilar(${s.song_id}, '${s.title.replace(/'/g,"\\'")}')">
+      <div class="song-card-title" title="${s.title}">${s.title}</div>
+      <div class="song-card-artist">${s.artist}</div>
+      <div class="song-card-meta">
+        <span class="badge badge-genre">${s.genre}</span>
+        ${s.score !== undefined ? `<span class="badge badge-score">${s.score.toFixed(3)}</span>` : ''}
+        ${s.method ? `<span class="badge badge-method">${s.method}</span>` : ''}
+      </div>
+      ${uid ? `<div style="margin-top:12px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-family:'JetBrains Mono',monospace">RATE</div>
+        <div class="stars" id="stars-${s.song_id}" data-uid="${uid}" data-sid="${s.song_id}">
+          ${[1,2,3,4,5].map(i=>`<span class="star" onclick="rate(${uid},${s.song_id},${i},event)">★</span>`).join('')}
+        </div>
+      </div>` : ''}
+    </div>`;
+}
+
+async function rate(uid, sid, rating, event) {
+  event.stopPropagation();
+  const stars = document.querySelectorAll(`#stars-${sid} .star`);
+  stars.forEach((s,i) => s.classList.toggle('lit', i < rating));
+  try {
+    await apiPost('/feedback', {user_id:uid, song_id:sid, rating:rating});
+    toast(`Rated "${rating}★" — profile updated!`);
+  } catch(e) { toast('Error saving rating', '#f472b6'); }
+}
+
+// ══════════════════════════════════════════════════════════
+// Songs Browse
+// ══════════════════════════════════════════════════════════
+let genresLoaded = false;
+async function loadSongs() {
+  if (!genresLoaded) {
+    try {
+      const genres = await api('/genres');
+      const sel = document.getElementById('genre-filter');
+      genres.forEach(g => {
+        const o = document.createElement('option');
+        o.value = g.genre; o.textContent = `${g.genre} (${g.count})`;
+        sel.appendChild(o);
+      });
+      genresLoaded = true;
+    } catch(e){}
+  }
+  const genre = document.getElementById('genre-filter').value;
+  const url   = genre ? `/songs?genre=${encodeURIComponent(genre)}&limit=50` : '/songs?limit=50';
+  const grid  = document.getElementById('songs-grid');
+  grid.innerHTML = '<div class="loading"><div class="spinner"></div> Loading songs...</div>';
+  try {
+    const songs = await api(url);
+    grid.innerHTML = songs.map(s => songCard(s)).join('');
+  } catch(e) {
+    grid.innerHTML = `<div class="empty"><p>Error loading songs.</p></div>`;
+  }
+}
+
+async function showSimilar(songId, title) {
+  document.getElementById('similar-section').style.display = 'block';
+  document.getElementById('songs-grid').parentElement.style.display='none';
+  document.querySelector('.card').style.display='none';
+
+  const seed = document.getElementById('similar-seed');
+  seed.innerHTML = `<strong>${title}</strong> <span style="color:var(--muted);font-size:13px">— Finding similar songs...</span>`;
+  document.getElementById('similar-results').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+  try {
+    const data = await api(`/songs/${songId}/similar?n=12`);
+    seed.innerHTML = `Showing songs similar to: <strong style="color:var(--accent)">${title}</strong>`;
+    document.getElementById('similar-results').innerHTML = data.recommendations.map(s=>songCard(s)).join('');
+  } catch(e) {
+    document.getElementById('similar-results').innerHTML = `<div class="empty"><p>Error: ${e.message}</p></div>`;
+  }
+}
+
+function hideSimilar() {
+  document.getElementById('similar-section').style.display='none';
+  document.getElementById('songs-grid').parentElement.style.display='';
+  document.querySelector('.card').style.display='';
+}
+
+// ══════════════════════════════════════════════════════════
+// Users
+// ══════════════════════════════════════════════════════════
+async function loadUser() {
+  const uid = document.getElementById('user-lookup').value;
+  const box = document.getElementById('user-detail');
+  box.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const [user, history, similar] = await Promise.all([
+      api(`/users/${uid}`),
+      api(`/users/${uid}/history`),
+      api(`/users/${uid}/similar?n=5`),
+    ]);
+
+    box.innerHTML = `
+      <div class="card">
+        <div class="card-title">👤 ${user.username}</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px">
+          <div style="background:var(--surface);padding:14px;border-radius:8px">
+            <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:4px">GENRE</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700">${user.fav_genre}</div>
+          </div>
+          <div style="background:var(--surface);padding:14px;border-radius:8px">
+            <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:4px">AGE GROUP</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700">${user.age_group}</div>
+          </div>
+          <div style="background:var(--surface);padding:14px;border-radius:8px">
+            <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:4px">HISTORY</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700">${user.history_count} songs</div>
+          </div>
+        </div>
+
+        <div class="tabs" style="margin-bottom:16px">
+          <button class="tab active" onclick="switchTab('history','${uid}')">Listening History</button>
+          <button class="tab" onclick="switchTab('similar-u','${uid}')">Similar Users</button>
+        </div>
+
+        <div id="tab-history">
+          <div class="songs-grid">
+            ${history.history.slice(0,12).map(s=>`
+              <div class="song-card">
+                <div class="song-card-title">${s.title}</div>
+                <div class="song-card-artist">${s.artist}</div>
+                <div class="song-card-meta">
+                  <span class="badge badge-genre">${s.genre}</span>
+                  ${s.user_rating ? `<span class="badge badge-score">★ ${s.user_rating}</span>` : ''}
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>
+
+        <div id="tab-similar-u" style="display:none">
+          <table style="width:100%">
+            <thead><tr><th>USER ID</th><th>USERNAME</th><th>SIMILARITY</th></tr></thead>
+            <tbody>
+              ${similar.similar_users.map(u=>`
+                <tr>
+                  <td><span style="font-family:'JetBrains Mono',monospace;color:var(--muted)">#${u.user_id}</span></td>
+                  <td>user_${String(u.user_id).padStart(3,'0')}</td>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <div style="flex:1;height:4px;background:rgba(255,255,255,0.04);border-radius:2px">
+                        <div style="width:${(u.similarity*100).toFixed(0)}%;height:100%;background:var(--accent);border-radius:2px"></div>
+                      </div>
+                      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent)">${u.similarity.toFixed(3)}</span>
+                    </div>
+                  </td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  } catch(e) {
+    box.innerHTML = `<div class="empty"><p>User not found or error: ${e.message}</p></div>`;
+  }
+}
+
+function switchTab(name, uid) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('tab-history').style.display = name==='history'?'':'none';
+  document.getElementById('tab-similar-u').style.display = name==='similar-u'?'':'none';
+}
+
+// ══════════════════════════════════════════════════════════
+// Analytics
+// ══════════════════════════════════════════════════════════
+async function loadAnalytics() {
+  const box = document.getElementById('analytics-content');
+  try {
+    const data = await api('/analytics/overview');
+    const rd   = data.rating_distribution;
+    const maxR = Math.max(...Object.values(rd));
+
+    box.innerHTML = `
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-card-num">${data.total_songs}</div><div class="stat-card-label">Songs</div></div>
+        <div class="stat-card"><div class="stat-card-num">${data.total_users}</div><div class="stat-card-label">Users</div></div>
+        <div class="stat-card"><div class="stat-card-num">${data.total_interactions.toLocaleString()}</div><div class="stat-card-label">Interactions</div></div>
+        <div class="stat-card"><div class="stat-card-num">${data.avg_rating}★</div><div class="stat-card-label">Avg Rating</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⭐ Rating Distribution</div>
+        ${[1,2,3,4,5].map(r=>`
+          <div class="genre-bar-row">
+            <div class="genre-name" style="display:flex;align-items:center;gap:6px">
+              ${'★'.repeat(r)}<span style="color:var(--muted)">${'☆'.repeat(5-r)}</span>
+            </div>
+            <div class="genre-track"><div class="genre-fill" style="width:${((rd[r]||0)/maxR*100).toFixed(1)}%;background:linear-gradient(90deg,#fbbf24,#f59e0b)"></div></div>
+            <div class="genre-count">${rd[r]||0}</div>
+          </div>`).join('')}
+      </div>
+
+      <div class="card">
+        <div class="card-title">🏆 Top 10 Songs by Rating</div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>#</th><th>TITLE</th><th>ARTIST</th><th>GENRE</th><th>AVG RATING</th></tr></thead>
+          <tbody>
+            ${data.top_songs.map((s,i)=>`
+              <tr>
+                <td style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px">${i+1}</td>
+                <td><strong>${s.title}</strong></td>
+                <td style="color:var(--muted)">${s.artist}</td>
+                <td><span class="badge badge-genre">${s.genre}</span></td>
+                <td><span style="color:#fbbf24">★</span> ${(+s.avg_rating).toFixed(2)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table></div>
+      </div>`;
+  } catch(e) {
+    box.innerHTML = `<div class="empty"><p>Error loading analytics: ${e.message}</p></div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// Health
+// ══════════════════════════════════════════════════════════
+async function checkHealth() {
+  try {
+    const h = await api('/health');
+    toast(`✅ System healthy — ${h.songs} songs, ${h.users} users`);
+  } catch(e) {
+    toast('❌ Backend not reachable', '#f472b6');
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// Init
+// ══════════════════════════════════════════════════════════
+loadDashboard();
+</script>
+</body>
+</html>
