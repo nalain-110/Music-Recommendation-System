@@ -1,8 +1,3 @@
-"""
-feature_extractor.py
-Audio feature extraction + Content-Based Filtering using cosine similarity.
-"""
-
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
@@ -31,11 +26,6 @@ FEATURE_WEIGHTS = {
 
 
 class ContentBasedRecommender:
-    """
-    Content-Based Filtering using cosine similarity on audio features.
-    Solves the cold-start problem — works even for brand new users.
-    """
-
     def __init__(self):
         self.songs_df = None
         self.feature_matrix = None
@@ -48,33 +38,26 @@ class ContentBasedRecommender:
     def fit(self, songs_df: pd.DataFrame):
         self.songs_df = songs_df.reset_index(drop=True).copy()
 
-        # Build index maps
         for i, sid in enumerate(self.songs_df["song_id"]):
             self.song_index[sid] = i
             self.index_song[i] = sid
 
-        # Extract and scale features
         features = self.songs_df[AUDIO_FEATURES].copy()
 
-        # Normalize tempo to [0,1]
         features["tempo"] = (features["tempo"] - 60) / (200 - 60)
 
-        # Normalize loudness to [0,1]
         features["loudness"] = (features["loudness"] + 60) / 60
 
         scaled = self.scaler.fit_transform(features)
 
-        # Apply feature weights
         weights = np.array([FEATURE_WEIGHTS[f] for f in AUDIO_FEATURES])
         self.feature_matrix = scaled * weights
 
-        # Compute pairwise cosine similarity
         self.similarity_matrix = cosine_similarity(self.feature_matrix)
         self.fitted = True
-        print(f"✅ ContentBased fitted on {len(self.songs_df)} songs.")
+        print(f" ContentBased fitted on {len(self.songs_df)} songs.")
 
     def recommend(self, song_id: int, n: int = 10, exclude_ids: list = None):
-        """Given a song_id, return top-n similar songs."""
         if not self.fitted:
             raise RuntimeError("Fit the model first.")
         if song_id not in self.song_index:
@@ -108,10 +91,6 @@ class ContentBasedRecommender:
         return results
 
     def recommend_for_profile(self, liked_song_ids: list, n: int = 10, exclude_ids: list = None):
-        """
-        Recommend based on a list of liked songs (user profile).
-        Averages their feature vectors and finds closest songs.
-        """
         if not liked_song_ids:
             return []
 
@@ -119,7 +98,6 @@ class ContentBasedRecommender:
         if not valid_ids:
             return []
 
-        # Average feature vector of liked songs
         indices = [self.song_index[sid] for sid in valid_ids]
         profile_vec = np.mean(self.feature_matrix[indices], axis=0).reshape(1, -1)
 
@@ -148,7 +126,6 @@ class ContentBasedRecommender:
         return results
 
     def get_feature_vector(self, song_id: int):
-        """Return the feature dict for a song."""
         if song_id not in self.song_index:
             return {}
         row = self.songs_df[self.songs_df["song_id"] == song_id].iloc[0]
@@ -157,7 +134,7 @@ class ContentBasedRecommender:
     def save(self, path="models/cbf_model.pkl"):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         joblib.dump(self, path)
-        print(f"💾 CBF model saved → {path}")
+        print(f" CBF model saved → {path}")
 
     @staticmethod
     def load(path="models/cbf_model.pkl"):
@@ -165,7 +142,6 @@ class ContentBasedRecommender:
 
 
 def get_pca_data(songs_df: pd.DataFrame, n_components: int = 2):
-    """PCA for 2D visualization of song clusters."""
     features = songs_df[AUDIO_FEATURES].copy()
     features["tempo"] = (features["tempo"] - 60) / 140
     features["loudness"] = (features["loudness"] + 60) / 60
