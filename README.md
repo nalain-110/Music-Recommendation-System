@@ -29,10 +29,6 @@ music_recommender/
 ```
 
 ---
-## 3. Open in browser
-
-http://localhost:8000
-
 ### Songs
 ```
 GET  /songs                  → All songs
