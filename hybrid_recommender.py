@@ -1,9 +1,3 @@
-"""
-hybrid_recommender.py
-Hybrid Recommendation Engine: dynamically combines CF + CBF.
-Also handles cold-start users and re-ranking with diversity.
-"""
-
 import pandas as pd
 import numpy as np
 from collaborative_filter import CollaborativeFilter
@@ -11,16 +5,6 @@ from feature_extractor import ContentBasedRecommender
 
 
 class HybridRecommender:
-    """
-    Combines Collaborative Filtering (SVD/KNN) and Content-Based Filtering
-    into a single weighted ensemble.
-
-    Strategy:
-    - Known user with rich history  →  70% CF (SVD) + 30% CBF
-    - Known user with sparse data   →  40% CF (KNN) + 60% CBF
-    - Cold-start (new) user         →  100% CBF on seeded songs
-    """
-
     def __init__(self, cf_weight: float = 0.6, cbf_weight: float = 0.4):
         self.cf_weight = cf_weight
         self.cbf_weight = cbf_weight
@@ -35,32 +19,25 @@ class HybridRecommender:
         self.songs_df = songs_df.copy()
         self.interactions_df = interactions_df.copy()
 
-        # Build user history maps
         for uid, grp in interactions_df.groupby("user_id"):
             self.user_history[uid] = grp["song_id"].tolist()
             self.user_ratings[uid] = dict(zip(grp["song_id"], grp["rating"]))
 
-        # Fit sub-models
         self.cf = CollaborativeFilter(n_factors=20, n_neighbors=15)
         self.cf.fit(interactions_df, songs_df)
 
         self.cbf = ContentBasedRecommender()
         self.cbf.fit(songs_df)
 
-        print("✅ HybridRecommender ready.")
+        print(" HybridRecommender ready.")
 
     def _interaction_count(self, user_id: int) -> int:
         return len(self.user_history.get(user_id, []))
 
     def recommend(self, user_id: int, n: int = 10, strategy: str = "auto") -> list:
-        """
-        Get top-n recommendations for a user.
-        strategy: 'auto' | 'svd' | 'knn' | 'cbf' | 'hybrid'
-        """
         history = self.user_history.get(user_id, [])
         n_history = len(history)
 
-        # Decide strategy
         if strategy == "auto":
             if n_history == 0:
                 strategy = "cbf"
@@ -72,7 +49,6 @@ class HybridRecommender:
         exclude = list(set(history))
 
         if strategy == "cbf":
-            # Cold start: recommend popular songs and similar to seeded random songs
             popular = self.songs_df.nlargest(5, "popularity")["song_id"].tolist()
             return self.cbf.recommend_for_profile(popular, n=n, exclude_ids=exclude)
 
@@ -87,7 +63,7 @@ class HybridRecommender:
             cbf_recs  = self.cbf.recommend_for_profile(history, n=n*2, exclude_ids=exclude)
             return self._merge(knn_recs, cbf_recs, w1=0.35, w2=0.65, n=n)
 
-        else:  # hybrid
+        else:
             svd_recs  = self.cf.recommend_svd(user_id, n=n*2, exclude_ids=exclude)
             cbf_recs  = self.cbf.recommend_for_profile(history, n=n*2, exclude_ids=exclude)
             cf_w  = self.cf_weight if n_history >= 20 else 0.5
@@ -96,7 +72,6 @@ class HybridRecommender:
 
     def _merge(self, list1: list, list2: list,
                w1: float, w2: float, n: int) -> list:
-        """Merge two ranked lists using weighted scores with diversity re-ranking."""
         scores = {}
         meta   = {}
 
@@ -131,12 +106,10 @@ class HybridRecommender:
         return final
 
     def explain(self, user_id: int, song_id: int) -> dict:
-        """Generate a simple explanation for why a song was recommended."""
         history = self.user_history.get(user_id, [])
         if not history:
             return {"reason": "Popular track you might enjoy as a new listener."}
 
-        # Find most similar song in history
         liked = [sid for sid, r in self.user_ratings.get(user_id, {}).items() if r >= 4.0]
         if not liked:
             liked = history[-3:]
@@ -164,7 +137,6 @@ class HybridRecommender:
         return {"reason": "Matches the listening pattern of users with similar taste."}
 
     def record_feedback(self, user_id: int, song_id: int, rating: float):
-        """Update user history with new feedback (lightweight online update)."""
         if user_id not in self.user_history:
             self.user_history[user_id] = []
             self.user_ratings[user_id] = {}
@@ -173,7 +145,6 @@ class HybridRecommender:
         self.user_ratings[user_id][song_id] = rating
 
     def get_user_profile(self, user_id: int) -> dict:
-        """Return a summary of the user's taste profile."""
         history = self.user_history.get(user_id, [])
         if not history:
             return {"history_count": 0, "top_genres": [], "avg_rating": None}
