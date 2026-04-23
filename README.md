@@ -1,4 +1,4 @@
-# 🎵 Music Recommendation System
+#  Music Recommendation System
 
 > An intelligent music recommender built with Python & ML — suggests songs based on user listening history, audio features, and behavioral patterns using SVD Matrix Factorization, KNN, and Cosine Similarity in a Hybrid ensemble.
 
