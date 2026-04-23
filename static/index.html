@@ -172,10 +172,8 @@ tr:hover td{background:rgba(167,139,250,0.03)}
   <button class="nav-btn" onclick="checkHealth()"><span class="icon">💚</span> Health Check</button>
 </aside>
 
-<!-- MAIN CONTENT -->
 <main class="main">
 
-  <!-- ── DASHBOARD ── -->
   <div id="section-dashboard" class="section active">
     <div class="page-header">
       <div class="page-title">🎵 Music Recommendation System</div>
@@ -203,7 +201,6 @@ tr:hover td{background:rgba(167,139,250,0.03)}
     </div>
   </div>
 
-  <!-- ── RECOMMENDATIONS ── -->
   <div id="section-recommend" class="section">
     <div class="page-header">
       <div class="page-title">🎯 Get Recommendations</div>
@@ -243,7 +240,6 @@ tr:hover td{background:rgba(167,139,250,0.03)}
     <div id="rec-results"></div>
   </div>
 
-  <!-- ── SONGS ── -->
   <div id="section-songs" class="section">
     <div class="page-header">
       <div class="page-title">🎶 Browse Songs</div>
@@ -280,7 +276,6 @@ tr:hover td{background:rgba(167,139,250,0.03)}
     </div>
   </div>
 
-  <!-- ── USERS ── -->
   <div id="section-users" class="section">
     <div class="page-header">
       <div class="page-title">👤 User Explorer</div>
@@ -322,9 +317,6 @@ tr:hover td{background:rgba(167,139,250,0.03)}
 <script>
 const API = '';  // Same origin — FastAPI serves this file
 
-// ══════════════════════════════════════════════════════════
-// Utility
-// ══════════════════════════════════════════════════════════
 async function api(path) {
   const res = await fetch(API + path);
   if (!res.ok) throw new Error(`API error ${res.status}`);
@@ -359,9 +351,6 @@ function showSection(name) {
   if (name === 'analytics') loadAnalytics();
 }
 
-// ══════════════════════════════════════════════════════════
-// Dashboard
-// ══════════════════════════════════════════════════════════
 async function loadDashboard() {
   try {
     const data = await api('/analytics/overview');
@@ -393,9 +382,6 @@ async function loadDashboard() {
   } catch(e) { console.error(e); }
 }
 
-// ══════════════════════════════════════════════════════════
-// Recommendations
-// ══════════════════════════════════════════════════════════
 async function loadRecommendations() {
   const uid  = document.getElementById('rec-user').value;
   const strat= document.getElementById('rec-strategy').value;
@@ -466,10 +452,6 @@ async function rate(uid, sid, rating, event) {
     toast(`Rated "${rating}★" — profile updated!`);
   } catch(e) { toast('Error saving rating', '#f472b6'); }
 }
-
-// ══════════════════════════════════════════════════════════
-// Songs Browse
-// ══════════════════════════════════════════════════════════
 let genresLoaded = false;
 async function loadSongs() {
   if (!genresLoaded) {
@@ -520,9 +502,6 @@ function hideSimilar() {
   document.querySelector('.card').style.display='';
 }
 
-// ══════════════════════════════════════════════════════════
-// Users
-// ══════════════════════════════════════════════════════════
 async function loadUser() {
   const uid = document.getElementById('user-lookup').value;
   const box = document.getElementById('user-detail');
@@ -604,9 +583,6 @@ function switchTab(name, uid) {
   document.getElementById('tab-similar-u').style.display = name==='similar-u'?'':'none';
 }
 
-// ══════════════════════════════════════════════════════════
-// Analytics
-// ══════════════════════════════════════════════════════════
 async function loadAnalytics() {
   const box = document.getElementById('analytics-content');
   try {
@@ -655,9 +631,6 @@ async function loadAnalytics() {
   }
 }
 
-// ══════════════════════════════════════════════════════════
-// Health
-// ══════════════════════════════════════════════════════════
 async function checkHealth() {
   try {
     const h = await api('/health');
@@ -667,9 +640,6 @@ async function checkHealth() {
   }
 }
 
-// ══════════════════════════════════════════════════════════
-// Init
-// ══════════════════════════════════════════════════════════
 loadDashboard();
 </script>
 </body>
