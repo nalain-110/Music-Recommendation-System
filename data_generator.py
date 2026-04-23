@@ -1,16 +1,8 @@
-"""
-data_generator.py
-Generates synthetic music dataset for the recommendation system.
-Run once to create the data files.
-"""
-
 import pandas as pd
 import numpy as np
 import os
 
 np.random.seed(42)
-
-# ── 50 Songs ──────────────────────────────────────────────
 SONGS = [
     # (id, title, artist, genre, year)
     (1,  "Blinding Lights",      "The Weeknd",       "Pop",       2019),
@@ -69,7 +61,6 @@ GENRES = ["Pop", "Rock", "Hip-Hop", "Soul/Pop", "Funk/Pop", "EDM",
           "Alt/Pop", "R&B/Pop", "Indie Pop", "K-Pop", "Folk/Pop", "Country/Hip-Hop"]
 
 def genre_to_features(genre):
-    """Return base audio features per genre."""
     defaults = {
         "Pop":            dict(energy=0.65, danceability=0.70, valence=0.65, tempo=118, acousticness=0.25, speechiness=0.06),
         "Rock":           dict(energy=0.85, danceability=0.50, valence=0.45, tempo=130, acousticness=0.10, speechiness=0.05),
@@ -84,7 +75,6 @@ def genre_to_features(genre):
         "Folk/Pop":       dict(energy=0.40, danceability=0.50, valence=0.55, tempo=90,  acousticness=0.65, speechiness=0.04),
         "Country/Hip-Hop":dict(energy=0.70, danceability=0.75, valence=0.65, tempo=136, acousticness=0.20, speechiness=0.15),
     }
-    # Find best matching key
     for key in defaults:
         if key in genre or genre in key:
             return defaults[key]
@@ -171,9 +161,9 @@ def generate_all(output_dir="data"):
     users.to_csv(f"{output_dir}/users.csv", index=False)
     interactions.to_csv(f"{output_dir}/interactions.csv", index=False)
 
-    print(f"✅ songs.csv          → {len(songs)} songs")
-    print(f"✅ users.csv          → {len(users)} users")
-    print(f"✅ interactions.csv   → {len(interactions)} interactions")
+    print(f" songs.csv          → {len(songs)} songs")
+    print(f" users.csv          → {len(users)} users")
+    print(f" interactions.csv   → {len(interactions)} interactions")
     return songs, users, interactions
 
 if __name__ == "__main__":
