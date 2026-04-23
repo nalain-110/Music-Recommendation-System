@@ -9,7 +9,6 @@
 
 ## Project Structure
 
-```
 music_recommender/
 ├── app.py                  ← FastAPI backend (main entry point)
 ├── data_generator.py       ← Synthetic dataset (50 songs, 200 users, 3000 interactions)
@@ -27,15 +26,13 @@ music_recommender/
     └── index.html          ← Frontend UI
 
 
-### 3. Open in browser
+## 3. Open in browser
 
 http://localhost:8000
 
 ### Songs
-```
 GET  /songs                  → All songs
 GET  /songs?genre=Pop        → Filter by genre
 GET  /songs/{song_id}        → Song details
 GET  /songs/{song_id}/similar → Similar songs (CBF)
 GET  /genres                 → Genre list with counts
-```
