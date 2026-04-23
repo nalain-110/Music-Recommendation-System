@@ -9,26 +9,20 @@ import pandas as pd
 import numpy as np
 import os
 
-# ── Absolute base directory (works no matter where you run from) ──
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR   = os.path.join(BASE_DIR, "data")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 UI_FILE    = os.path.join(STATIC_DIR, "index.html")
 
-# ── Internal modules ──────────────────────────────────────────────
 from data_generator import generate_all
 from feature_extractor import ContentBasedRecommender, get_pca_data
 from collaborative_filter import CollaborativeFilter
 from hybrid_recommender import HybridRecommender
 
-# ── Global state ──────────────────────────────────────────────────
 DATA  = {}
 MODEL = {}
 
 
-# ══════════════════════════════════════════════════════════════════
-# Lifespan — startup & shutdown
-# ══════════════════════════════════════════════════════════════════
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("\n🎵 Music Recommendation System starting up...")
@@ -60,9 +54,6 @@ async def lifespan(app: FastAPI):
     print("👋 Shut down cleanly.")
 
 
-# ══════════════════════════════════════════════════════════════════
-# App
-# ══════════════════════════════════════════════════════════════════
 app = FastAPI(
     title="🎵 Music Recommendation System",
     description="ML-powered music recommender — Hybrid CF + CBF.",
@@ -78,18 +69,12 @@ app.add_middleware(
 )
 
 
-# ══════════════════════════════════════════════════════════════════
-# Schemas
-# ══════════════════════════════════════════════════════════════════
 class FeedbackRequest(BaseModel):
     user_id: int
     song_id: int
     rating:  float = Field(..., ge=1.0, le=5.0)
 
 
-# ══════════════════════════════════════════════════════════════════
-# UI — absolute path, never fails due to CWD issues
-# ══════════════════════════════════════════════════════════════════
 @app.get("/", response_class=HTMLResponse, tags=["UI"])
 def serve_ui():
     if not os.path.exists(UI_FILE):
@@ -102,9 +87,6 @@ def serve_ui():
         return HTMLResponse(f.read())
 
 
-# ══════════════════════════════════════════════════════════════════
-# Health
-# ══════════════════════════════════════════════════════════════════
 @app.get("/health", tags=["System"])
 def health():
     return {
@@ -116,10 +98,6 @@ def health():
         "models_loaded": list(MODEL.keys()),
     }
 
-
-# ══════════════════════════════════════════════════════════════════
-# Songs
-# ══════════════════════════════════════════════════════════════════
 @app.get("/songs", tags=["Songs"])
 def get_songs(genre: Optional[str] = None,
               limit: int = Query(default=50, le=200),
@@ -153,9 +131,6 @@ def get_genres():
     return counts.to_dict(orient="records")
 
 
-# ══════════════════════════════════════════════════════════════════
-# Users
-# ══════════════════════════════════════════════════════════════════
 @app.get("/users", tags=["Users"])
 def get_users(limit: int = 20, offset: int = 0):
     return DATA["users"].iloc[offset: offset + limit].to_dict(orient="records")
@@ -192,9 +167,6 @@ def similar_users(user_id: int, n: int = 5):
             "similar_users": MODEL["cf"].get_similar_users(user_id, n=n)}
 
 
-# ══════════════════════════════════════════════════════════════════
-# Recommendations
-# ══════════════════════════════════════════════════════════════════
 @app.get("/recommend/{user_id}", tags=["Recommendations"])
 def recommend(user_id: int,
               n:        int = Query(default=10, ge=1, le=50),
@@ -220,9 +192,6 @@ def submit_feedback(req: FeedbackRequest):
             "updated_profile": MODEL["hybrid"].get_user_profile(req.user_id)}
 
 
-# ══════════════════════════════════════════════════════════════════
-# Analytics
-# ══════════════════════════════════════════════════════════════════
 @app.get("/analytics/overview", tags=["Analytics"])
 def analytics_overview():
     songs        = DATA["songs"]
@@ -261,17 +230,10 @@ def song_features(song_id: int):
         raise HTTPException(404, "Song not found")
     return {"song_id": song_id, "features": vec}
 
-
-# ══════════════════════════════════════════════════════════════════
-# Static files (CSS/JS assets)
-# ══════════════════════════════════════════════════════════════════
 if os.path.isdir(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
-# ══════════════════════════════════════════════════════════════════
-# Entry point
-# ══════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
