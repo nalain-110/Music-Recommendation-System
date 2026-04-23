@@ -1,7 +1,11 @@
-# 🎵 Music Recommendation System
+#  Music Recommendation System
 
-A production-grade ML-powered music recommendation system using **Hybrid Collaborative + Content-Based Filtering**.
+> An intelligent music recommender built with Python & ML — suggests songs based on user listening history, audio features, and behavioral patterns using SVD Matrix Factorization, KNN, and Cosine Similarity in a Hybrid ensemble.
 
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.104-green)
+![ML](https://img.shields.io/badge/ML-Scikit--learn-orange)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 ---
 
 ## 📁 Project Structure
@@ -26,29 +30,6 @@ music_recommender/
 
 ---
 
-## 🚀 Quick Start
-
-### 1. Install dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 2. Run the app
-```bash
-uvicorn app:app --reload --port 8000
-```
-
-### 3. Open in browser
-```
-http://localhost:8000
-```
-
-### 4. API Docs (Swagger)
-```
-http://localhost:8000/docs
-```
-
----
 
 ## 🤖 ML Algorithms
 
@@ -89,15 +70,6 @@ http://localhost:8000/docs
 
 ---
 
-## 📡 API Endpoints
-
-### Recommendations
-```
-GET  /recommend/{user_id}?strategy=auto&n=10
-GET  /recommend/{user_id}/explain/{song_id}
-POST /feedback   {"user_id":1, "song_id":5, "rating":4.5}
-```
-
 ### Songs
 ```
 GET  /songs                  → All songs
@@ -106,77 +78,6 @@ GET  /songs/{song_id}        → Song details
 GET  /songs/{song_id}/similar → Similar songs (CBF)
 GET  /genres                 → Genre list with counts
 ```
-
-### Users
-```
-GET  /users/{user_id}         → User profile
-GET  /users/{user_id}/history → Listening history
-GET  /users/{user_id}/similar → Similar users (KNN)
-```
-
-### Analytics
-```
-GET  /analytics/overview      → System stats
-GET  /analytics/pca           → 2D PCA coordinates
-GET  /analytics/features/{id} → Audio feature radar data
-```
-
----
-
-## 📊 Evaluation
-
-```bash
-python evaluate.py
-```
-
-Computes:
-- **Precision@K** — fraction of top-K recs that are relevant
-- **Recall@K** — fraction of relevant songs found in top-K
-- **F1@K** — harmonic mean of P@K and R@K
-- **RMSE** — rating prediction error
-- **Genre Consistency** — CBF genre accuracy
-- **Artist Diversity** — recommendation variety
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Language | Python 3.11 |
-| API Framework | FastAPI + Uvicorn |
-| ML | Scikit-learn (SVD, KNN, Cosine Sim) |
-| Data | Pandas, NumPy |
-| Audio | Librosa (integration-ready) |
-| Frontend | Vanilla JS + CSS (no framework needed) |
-| Model Persistence | Joblib |
-
----
-
-## 🧪 Example Usage
-
-```python
-from hybrid_recommender import HybridRecommender
-from data_generator import generate_all
-
-songs, users, interactions = generate_all()
-
-rec = HybridRecommender()
-rec.fit(songs, users, interactions)
-
-# Get 10 recommendations for user 1
-recs = rec.recommend(user_id=1, n=10, strategy="auto")
-for r in recs:
-    print(f"{r['title']} — {r['artist']}  ({r['score']:.3f})")
-
-# Submit feedback
-rec.record_feedback(user_id=1, song_id=5, rating=4.5)
-
-# Get user profile
-profile = rec.get_user_profile(user_id=1)
-print(profile)
-```
-
 ---
 
 ## 👨‍💻 Author
