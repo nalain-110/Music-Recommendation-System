@@ -8,7 +8,7 @@
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 music_recommender/
@@ -31,7 +31,7 @@ music_recommender/
 ---
 
 
-## 🤖 ML Algorithms
+## ML Algorithms
 
 | Algorithm | Type | Use Case |
 |-----------|------|----------|
@@ -42,7 +42,7 @@ music_recommender/
 
 ---
 
-## 🎛️ Recommendation Strategies
+## Recommendation Strategies
 
 | Strategy | When Used | CF Weight | CBF Weight |
 |----------|-----------|-----------|------------|
@@ -54,7 +54,7 @@ music_recommender/
 
 ---
 
-## 🎵 Audio Features (12 dimensions)
+## Audio Features (12 dimensions)
 
 | Feature | Description |
 |---------|-------------|
@@ -80,6 +80,6 @@ GET  /genres                 → Genre list with counts
 ```
 ---
 
-## 👨‍💻 Author
+## Author
 
 Built as a BSAI Capstone Project — Music Recommendation System using ML.
