@@ -37,3 +37,7 @@ GET  /songs/{song_id}        → Song details
 GET  /songs/{song_id}/similar → Similar songs (CBF)
 GET  /genres                 → Genre list with counts
 ```
+
+## 👨‍💻 Author
+
+Built as a BSAI Capstone Project — Music Recommendation System using ML.
