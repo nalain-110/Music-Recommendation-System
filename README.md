@@ -34,8 +34,10 @@ music_recommender/
 http://localhost:8000
 
 ### Songs
+```
 GET  /songs                  → All songs
 GET  /songs?genre=Pop        → Filter by genre
 GET  /songs/{song_id}        → Song details
 GET  /songs/{song_id}/similar → Similar songs (CBF)
 GET  /genres                 → Genre list with counts
+```
